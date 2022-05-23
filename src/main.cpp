@@ -24,19 +24,20 @@
 #include <sqlite3.h> 
 using namespace std; 
 
+void addBook(sqlite3 *db, string title, string author, int rc);
 /********************************************************************************************************************
 * Function: Callback 
 * Desc: Not Sure haha 
 ********************************************************************************************************************/
-static int callback(void *data, int argc, char** argv, char** azColName){
-    int i; 
-    fprintf(stderr, "%s\n", (const char*)data); 
-    for(i=0; i<argc; i++){
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-    }
-    printf("\n");
-    return 0;  
-}
+// static int callback(void *data, int argc, char** argv, char** azColName){
+//     int i; 
+//     fprintf(stderr, "%s\n", (const char*)data); 
+//     for(i=0; i<argc; i++){
+//         printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+//     }
+//     printf("\n");
+//     return 0;  
+// }
 
 
 /********************************************************************************************************************
@@ -62,26 +63,44 @@ int main(int argc, char** argv){
     GoT.title = "Game of Thrones"; 
 
     string database = "bookdb.csv";
+
+    // typedef struct sqlite3 sqlite3
+    // Creates a database structure. Further definition is a bit outside of the scope 
     sqlite3 *db; 
     int rc; 
     rc = sqlite3_open("bookdb.db", &db); 
-    string query = "SELECT * FROM BOOKS;"; 
-    sqlite3_exec(db, query.c_str(), callback, NULL, NULL); 
-    string sql = ("INSERT INTO BOOKS VALUES(1, 'The Poppy War', 'R.F Kuang');" 
-                "INSERT INTO BOOKS VALUES(2, 'Game of Thrones', 'George R.R. Martin');");
-    char *messageError; 
-    rc = sqlite3_exec(db, sql.c_str(), NULL, 0, &messageError); 
-
-    if (rc != SQLITE_OK) {
-        cerr<<"Error Insert"<<endl; 
-        sqlite3_free(messageError); 
-    }
-    else{
-        fprintf(stderr, "Records Created successfully\n"); 
-    }
-    cout<<"STATE OF TABLE AFTER INSERT"<<endl; 
-    sqlite3_exec(db, query.c_str(), callback, NULL, NULL); 
-    
+    addBook(db, "The War on Normal People", "Andrew Yang", rc); 
+    addBook(db,"The Audacity of Hope", "Barack Obama", rc);
     sqlite3_close(db); 
+
+    return 0; 
 }
 
+void addBook(sqlite3 *db, string title, string author, int rc){
+    Book newBook; 
+    newBook.title = title; 
+    newBook.author = author; 
+
+    sqlite3_stmt *stmt; 
+
+    if (rc != SQLITE_OK){
+        // const char *sqlite3_errmsg(sqlite3*)
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db)); 
+        // int sqlite3_close(sqlite3 *) 
+        sqlite3_close(db); 
+    }
+
+    string sql = "INSERT INTO BOOKS VALUES(last_insert_rowid(), ?, ?); ";
+
+    rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, 0); 
+
+    if (rc == SQLITE_OK){
+        sqlite3_bind_text(stmt,1, newBook.title.c_str(), -1, NULL);
+        sqlite3_bind_text(stmt,2, newBook.author.c_str(), -1, NULL);
+        
+    } else{
+        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db)); 
+    }
+    sqlite3_step(stmt); 
+    sqlite3_finalize(stmt);
+}
