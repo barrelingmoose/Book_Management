@@ -1,0 +1,6 @@
+make --dry-run --keep-going --print-directory
+make: Entering directory '/home/themoose/Projects/BookSys'
+make: Leaving directory '/home/themoose/Projects/BookSys'
+ 
+make: *** No targets specified and no makefile found.  Stop.
+
