@@ -62,15 +62,18 @@ int main(int argc, char** argv){
     GoT.author = "George R.R. Martin"; 
     GoT.title = "Game of Thrones"; 
 
-    string database = "bookdb.csv";
-
-    // typedef struct sqlite3 sqlite3
-    // Creates a database structure. Further definition is a bit outside of the scope 
     sqlite3 *db; 
     int rc; 
+
+    string sql = "DROP TABLE IF EXISTS BOOKS;" 
+                "CREATE TABLE BOOKS(Id INT, Title TEXT, Author TEXT);";
+    
     rc = sqlite3_open("bookdb.db", &db); 
+    rc = sqlite3_exec(db, sql.c_str(), 0, 0, 0);
     addBook(db, "The War on Normal People", "Andrew Yang", rc); 
     addBook(db,"The Audacity of Hope", "Barack Obama", rc);
+    addBook(db,poppyWar.title, poppyWar.author, rc);
+    addBook(db, GoT.title, GoT.author, rc); 
     sqlite3_close(db); 
 
     return 0; 
