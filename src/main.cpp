@@ -25,19 +25,21 @@
 using namespace std; 
 
 void addBook(sqlite3 *db, string title, string author, int rc);
+void printDatabase(sqlite3 *db);
+void advancedQuery(sqlite3 *db, string row = "*");
 /********************************************************************************************************************
 * Function: Callback 
-* Desc: Not Sure haha 
+* Desc: Prints the results of database search to the screen 
 ********************************************************************************************************************/
-// static int callback(void *data, int argc, char** argv, char** azColName){
-//     int i; 
-//     fprintf(stderr, "%s\n", (const char*)data); 
-//     for(i=0; i<argc; i++){
-//         printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-//     }
-//     printf("\n");
-//     return 0;  
-// }
+static int callback(void *data, int argc, char** argv, char** azColName){
+    int i; 
+    fprintf(stderr, "%s\n", (const char*)data); 
+    for(i=0; i<argc; i++){
+        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+    }
+    printf("\n");
+    return 0;  
+}
 
 
 /********************************************************************************************************************
@@ -74,6 +76,7 @@ int main(int argc, char** argv){
     addBook(db,"The Audacity of Hope", "Barack Obama", rc);
     addBook(db,poppyWar.title, poppyWar.author, rc);
     addBook(db, GoT.title, GoT.author, rc); 
+    printDatabase(db); 
     sqlite3_close(db); 
 
     return 0; 
@@ -106,4 +109,44 @@ void addBook(sqlite3 *db, string title, string author, int rc){
     }
     sqlite3_step(stmt); 
     sqlite3_finalize(stmt);
+}
+
+void printDatabase(sqlite3 *db){
+
+    string data = "CALLBACK FUNCTION"; 
+    string sql = "SELECT * FROM BOOKS;"; 
+
+    int rc = sqlite3_exec(db, sql.c_str(), callback, (void*)data.c_str(), NULL); 
+
+    if(rc!=SQLITE_OK){
+        cerr<<"Error SELECT"<<endl; 
+    }
+    else{
+        cout<<"Operation OK!"<<endl; 
+    }
+}
+
+void advancedQuery(sqlite3 *db, string row = "*"){
+
+    string data = "CALLBACK FUNCTION"; 
+    string sql = "SELECT ? FROM BOOKS;"; 
+    sqlite3_stmt *stmt; 
+
+
+
+    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1,&stmt, NULL); 
+
+    if (rc == SQLITE_OK){
+        sqlite3_bind_text(stmt,1, row.c_str(), -1, NULL);
+        
+    } else{
+        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db)); 
+    }
+
+    if(rc!=SQLITE_OK){
+        cerr<<"Error SELECT"<<endl; 
+    }
+    else{
+        cout<<"Operation OK!"<<endl; 
+    }
 }
