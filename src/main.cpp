@@ -26,14 +26,14 @@ using namespace std;
 
 void addBook(sqlite3 *db, string title, string author, int rc);
 void printDatabase(sqlite3 *db);
-void advancedQuery(sqlite3 *db, string row = "*");
+void advancedQuery(sqlite3 *db, string column, int option);
 /********************************************************************************************************************
 * Function: Callback 
 * Desc: Prints the results of database search to the screen 
 ********************************************************************************************************************/
 static int callback(void *data, int argc, char** argv, char** azColName){
     int i; 
-    fprintf(stderr, "%s\n", (const char*)data); 
+    // fprintf(stderr, "%s\n", (const char*)data); 
     for(i=0; i<argc; i++){
         printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
     }
@@ -59,11 +59,13 @@ class Book{
 int main(int argc, char** argv){
     Book poppyWar; 
     Book GoT; 
+    Book drgnRep; 
     poppyWar.author = "R.F Kuang"; 
     poppyWar.title = "The Poppy War"; 
     GoT.author = "George R.R. Martin"; 
     GoT.title = "Game of Thrones"; 
-
+    drgnRep.author = poppyWar.author; 
+    drgnRep.title = "The Dragon Republic";
     sqlite3 *db; 
     int rc; 
 
@@ -76,7 +78,10 @@ int main(int argc, char** argv){
     addBook(db,"The Audacity of Hope", "Barack Obama", rc);
     addBook(db,poppyWar.title, poppyWar.author, rc);
     addBook(db, GoT.title, GoT.author, rc); 
+    addBook(db, drgnRep.title, drgnRep.author, rc); 
+    addBook(db, "Forward", "Andrew Yang", rc); 
     printDatabase(db); 
+    advancedQuery(db, "Andrew Yang", 1); 
     sqlite3_close(db); 
 
     return 0; 
@@ -126,27 +131,31 @@ void printDatabase(sqlite3 *db){
     }
 }
 
-void advancedQuery(sqlite3 *db, string row = "*"){
+void advancedQuery(sqlite3 *db, string column, int option) {
+    string sql; 
+    string trilogy; 
+    string call; 
+    if(option == 1){
+        call = "Author Search";
+        sql = "SELECT * FROM BOOKS WHERE AUTHOR = "; 
+        trilogy = sql + '\"'+ column + '\"'+";";
+    };
+    if(option == 2){
+        call = "Book Search";
+        sql = "SELECT * FROM BOOKS WHERE TITLE = "; 
+        trilogy = sql + '\"'+ column + '\"'+";";
+    };
 
-    string data = "CALLBACK FUNCTION"; 
-    string sql = "SELECT ? FROM BOOKS;"; 
-    sqlite3_stmt *stmt; 
+    cout<<trilogy<<endl; 
+    
+    //sqlite3_stmt *stmt; 
 
-
-
-    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1,&stmt, NULL); 
-
-    if (rc == SQLITE_OK){
-        sqlite3_bind_text(stmt,1, row.c_str(), -1, NULL);
-        
-    } else{
-        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db)); 
-    }
+    int rc = sqlite3_exec(db, trilogy.c_str(), callback, (void*)call.c_str(), NULL); 
 
     if(rc!=SQLITE_OK){
         cerr<<"Error SELECT"<<endl; 
     }
     else{
-        cout<<"Operation OK!"<<endl; 
+        cout<<"Query Successful!"<<endl; 
     }
 }
