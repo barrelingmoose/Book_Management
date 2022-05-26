@@ -7,9 +7,27 @@
 // But not entirely
 #include <sqlite3.h> 
 
+using namespace std; 
+
+/********************************************************************************************************************
+* Class: Book 
+* Desc: Creates default class classifier for Books 
+********************************************************************************************************************/
+class Book{
+    public: 
+        string title;  
+        string author; 
+};
+
 void addBook(sqlite3 *db, string title, string author, int rc);
 void printDatabase(sqlite3 *db);
 void advancedQuery(sqlite3 *db, string column, int option);
+
+/********************************************************************************************************************
+* Function: Callback 
+* Desc: Prints the results of database search to the screen 
+********************************************************************************************************************/
+
 
 static int callback(void *data, int argc, char** argv, char** azColName){
     int i; 
@@ -93,3 +111,4 @@ void advancedQuery(sqlite3 *db, string column, int option) {
         cout<<"Query Successful!"<<endl; 
     }
 }
+
